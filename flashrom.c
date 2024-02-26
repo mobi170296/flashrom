@@ -1072,6 +1072,7 @@ static probe_func_t *lookup_probe_func_ptr(const struct flashchip *chip)
 		case PROBE_SPI_AT45DB: return &probe_spi_at45db;
 		case PROBE_SPI_BIG_SPANSION: return &probe_spi_big_spansion;
 		case PROBE_SPI_RDID: return &probe_spi_rdid;
+		case PROBE_SPI_RDID2: return &probe_spi_rdid2;
 		case PROBE_SPI_RDID4: return &probe_spi_rdid4;
 		case PROBE_SPI_REMS: return &probe_spi_rems;
 		case PROBE_SPI_RES1: return &probe_spi_res1;

@@ -28,6 +28,10 @@
 /* INSIZE may be 0x04 for some chips*/
 #define JEDEC_RDID_INSIZE	0x03
 
+#define JEDEC_RDID2 0x9f
+#define JEDEC_RDID2_OUTSIZE 0x02
+#define JEDEC_RDID2_INSIZE 0x02
+
 /* Some ST M95X model */
 #define ST_M95_RDID		0x83
 #define ST_M95_RDID_3BA_OUTSIZE	0x04	/* 8b op, 24bit addr where size >64KiB */

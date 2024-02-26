@@ -918,7 +918,7 @@ int main(int argc, char *argv[])
 	print_banner();
 
 	/* FIXME: Delay calibration should happen in programmer code. */
-	if (flashrom_init(1))
+	if (flashrom_init(0))
 		exit(1);
 
 	setbuf(stdout, NULL);

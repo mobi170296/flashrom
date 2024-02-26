@@ -29,6 +29,7 @@
 
 enum id_type {
 	RDID,
+	RDID2,
 	RDID4,
 	REMS,
 	RES2,
@@ -57,6 +58,21 @@ static int spi_rdid(struct flashctx *flash, unsigned char *readarr, int bytes)
 	if (ret)
 		return ret;
 	msg_cspew("RDID returned");
+	for (i = 0; i < bytes; i++)
+		msg_cspew(" 0x%02x", readarr[i]);
+	msg_cspew(". ");
+	return 0;
+}
+
+static int spi_rdid2(struct flashctx *flash, unsigned char *readarr, int bytes)
+{
+	static const unsigned char cmd[JEDEC_RDID2_OUTSIZE] = {JEDEC_RDID, 0};
+	int ret, i;
+
+	ret = spi_send_command(flash, sizeof(cmd), bytes, cmd, readarr);
+	if (ret)
+		return ret;
+	msg_cspew("RDID2 returned");
 	for (i = 0; i < bytes; i++)
 		msg_cspew(" 0x%02x", readarr[i]);
 	msg_cspew(". ");
@@ -177,6 +193,27 @@ static int probe_spi_rdid_generic(struct flashctx *flash, int bytes)
 int probe_spi_rdid(struct flashctx *flash)
 {
 	return probe_spi_rdid_generic(flash, 3);
+}
+
+/* Used for READ ID with 2 out bytes and 2 in bytes */
+int probe_spi_rdid2(struct flashctx *flash)
+{
+	uint32_t id1, id2;
+	enum id_type idty = RDID2;
+
+	if (!id_cache[idty].is_cached)
+	{
+		const int ret = spi_rdid2(flash, id_cache[idty].bytes, 2);
+		if (ret == SPI_INVALID_LENGTH)
+			msg_cinfo("2 byte RDID2 not supported on this SPI controller\n");
+		if (ret)
+			return 0;
+		id_cache[idty].is_cached = true;
+	}
+
+	id1 = id_cache[idty].bytes[0];
+	id2 = id_cache[idty].bytes[1];
+	return compare_id(flash, id1, id2);
 }
 
 int probe_spi_rdid4(struct flashctx *flash)

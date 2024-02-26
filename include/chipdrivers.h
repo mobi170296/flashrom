@@ -30,6 +30,7 @@ bool spi_probe_opcode(const struct flashctx *flash, uint8_t opcode);
 
 /* spi25.c */
 int probe_spi_rdid(struct flashctx *flash);
+int probe_spi_rdid2(struct flashctx *flash);
 int probe_spi_rdid4(struct flashctx *flash);
 int probe_spi_rems(struct flashctx *flash);
 int probe_spi_res1(struct flashctx *flash);

@@ -57,6 +57,38 @@ const struct flashchip flashchips[] = {
 	 */
 
 	{
+		.vendor		= "DOSILICON",
+		.name		= "DS35X1GAXXX",
+		.bustype	= BUS_SPI,
+		.manufacture_id	= DOSILICON_ID,
+		.model_id	= DOSILICON_DS35X1GAXXX,
+		.total_size	= 131072,
+		.page_size	= 2048,
+		.feature_bits	= FEATURE_WRSR_WREN | FEATURE_OTP | FEATURE_4BA,
+		.tested		= TEST_OK_PR,
+		.probe		= PROBE_SPI_RDID2,
+		.probe_timing	= TIMING_ZERO,
+		.block_erasers	=
+		{
+			{
+				.eraseblocks = {
+					{16 * 1024, 1},
+					{8 * 1024, 2},
+					{32 * 1024, 1},
+					{64 * 1024, 3},
+				},
+				.block_erase = JEDEC_SECTOR_ERASE,
+			}, {
+				.eraseblocks = { {256 * 1024, 1} },
+				.block_erase = JEDEC_CHIP_BLOCK_ERASE,
+			},
+		},
+		.write		= SPI_CHIP_WRITE256,
+		.read		= SPI_CHIP_READ,
+		.voltage	= {600, 4600}, /* 0.6-4.6V */
+	},
+
+	{
 		.vendor		= "AMD",
 		.name		= "Am29F002(N)BB",
 		.bustype	= BUS_PARALLEL,
