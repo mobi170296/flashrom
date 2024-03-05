@@ -64,7 +64,7 @@ const struct flashchip flashchips[] = {
 		.model_id	= DOSILICON_DS35X1GAXXX,
 		.total_size	= 131072,
 		.page_size	= 2048,
-		.feature_bits	= FEATURE_WRSR_WREN | FEATURE_OTP | FEATURE_4BA,
+		.feature_bits	= FEATURE_OTP,
 		.tested		= TEST_OK_PR,
 		.probe		= PROBE_SPI_RDID2,
 		.probe_timing	= TIMING_ZERO,
@@ -84,7 +84,7 @@ const struct flashchip flashchips[] = {
 			},
 		},
 		.write		= SPI_CHIP_WRITE256,
-		.read		= SPI_CHIP_READ,
+		.read		= SPI_READ_DOSILICON,
 		.voltage	= {600, 4600}, /* 0.6-4.6V */
 	},
 

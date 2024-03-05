@@ -179,4 +179,7 @@ void decode_range_spi25_64k_block(size_t *start, size_t *len, const struct wp_bi
 void decode_range_spi25_bit_cmp(size_t *start, size_t *len, const struct wp_bits *, size_t chip_len);
 void decode_range_spi25_2x_block(size_t *start, size_t *len, const struct wp_bits *, size_t chip_len);
 
+/* dosilicon.c */
+int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, unsigned int len);
+
 #endif /* !__CHIPDRIVERS_H__ */

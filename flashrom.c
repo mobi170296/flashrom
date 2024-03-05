@@ -552,6 +552,7 @@ static read_func_t *lookup_read_func_ptr(const struct flashchip *chip)
 		case EDI_CHIP_READ: return &edi_chip_read;
 		case SPI_READ_AT45DB: return spi_read_at45db;
 		case SPI_READ_AT45DB_E8: return spi_read_at45db_e8;
+		case SPI_READ_DOSILICON: return spi_read_dosilicon;
 		case TEST_READ_INJECTOR: return g_test_read_injector;
 	/* default: total function, 0 indicates no read function set.
 	 * We explicitly do not want a default catch-all case in the switch
