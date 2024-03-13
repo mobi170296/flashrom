@@ -14,6 +14,7 @@
 #define READ_ROM_CACHE 0x0B
 #define PROGRAM_LOAD 0x02
 #define BLOCK_ERASE 0xD8
+#define RESET 0xff
 
 /* REGISTER */
 #define BLOCK_LOCK_REGISTER 0xA0
@@ -74,15 +75,40 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 	msg_ginfo("Reading flash rom %u %u...\n", addr, len);
 	
 	uint8_t cmd_read_page[] = {PAGE_READ, 0x00, 0x00, 0x00};
-	uint8_t cmd_read_from_cache[] = {READ_ROM_CACHE, 0x00, 0x00, 0x00};
+	uint8_t cmd_read_from_cache[] = {0x03, 0x00, 0x00, 0x00};
 	uint8_t status;
 	uint16_t page = 0x00;
 	uint32_t bi = 0;
 	uint8_t data[2112];
 	uint32_t i;
 
+	printf("Reset Dosilicon flash\n");
+	if (spi_send_command(flash, 1, 0, (const uint8_t[]) {0xff}, NULL))
+	{
+		printf("Cannot reset Dosilicon flash\n");
+		return 1;
+	}
+
+	while (1)
+	{
+		if (dosilicon_get_feature(flash, STATUS_REGISTER, &status))
+		{
+			printf("Cannot get status\n");
+			return 1;
+		}
+
+		printf("STATUS: %02X\n", status);
+
+		if ((status & STATUS_OIP_BIT) == STATUS_OIP_READY)
+		{
+			break;
+		}
+	}
+
 	for (; page < 0xffff; page++)
 	{
+		cmd_read_page[2] = (page >> 8) & 0xff;
+		cmd_read_page[3] = page & 0xff;
 		if (spi_send_command(flash, sizeof cmd_read_page, 0, cmd_read_page, NULL))
 		{
 			printf("Cannot read page\n");
@@ -118,6 +144,11 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 		for (i = 0; i < sizeof data; i++)
 		{
 			buf[bi++] = data[i];
+			// printf("%02X ", data[i]);
+			if (i % 32 == 31)
+			{
+				// printf("\n");
+			}
 		}
 
 		printf("READ DONE PAGE: %04X\n", page);
