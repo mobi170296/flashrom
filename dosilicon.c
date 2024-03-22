@@ -75,37 +75,15 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 	msg_ginfo("Reading flash rom %u %u...\n", addr, len);
 	
 	uint8_t cmd_read_page[] = {PAGE_READ, 0x00, 0x00, 0x00};
-	uint8_t cmd_read_from_cache[] = {0x03, 0x00, 0x00, 0x00};
+	uint8_t cmd_read_from_cache[] = {READ_ROM_CACHE, 0x00, 0x00, 0x00};
 	uint8_t status;
-	uint16_t page = 0x00;
+	uint32_t page = 0x00;
 	uint32_t bi = 0;
-	uint8_t data[2112];
-	uint32_t i;
+	uint8_t data[2048];
+	uint32_t i, ci;
+	uint8_t sample[2048];
 
-	printf("Reset Dosilicon flash\n");
-	if (spi_send_command(flash, 1, 0, (const uint8_t[]) {0xff}, NULL))
-	{
-		printf("Cannot reset Dosilicon flash\n");
-		return 1;
-	}
-
-	while (1)
-	{
-		if (dosilicon_get_feature(flash, STATUS_REGISTER, &status))
-		{
-			printf("Cannot get status\n");
-			return 1;
-		}
-
-		printf("STATUS: %02X\n", status);
-
-		if ((status & STATUS_OIP_BIT) == STATUS_OIP_READY)
-		{
-			break;
-		}
-	}
-
-	for (; page < 0xffff; page++)
+	for (; page <= 0xffff; page++)
 	{
 		cmd_read_page[2] = (page >> 8) & 0xff;
 		cmd_read_page[3] = page & 0xff;
@@ -114,8 +92,6 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 			printf("Cannot read page\n");
 			return 1;
 		}
-
-		usleep(10);
 
 		while (1)
 		{
@@ -133,22 +109,39 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 			}
 		}
 
-		memset(data, 0, sizeof data);
+		memset(sample, 0, sizeof sample);
 
-		if (spi_send_command(flash, sizeof cmd_read_from_cache, sizeof data, cmd_read_from_cache, data))
+		if (spi_send_command(flash, sizeof cmd_read_from_cache, sizeof sample, cmd_read_from_cache, sample))
 		{
 			printf("Cannot read from cache\n");
 			return 1;
 		}
 
-		for (i = 0; i < sizeof data; i++)
+		for (ci = 0; ci < 5; ci++)
 		{
-			buf[bi++] = data[i];
-			// printf("%02X ", data[i]);
-			if (i % 32 == 31)
+			memset(data, 0, sizeof data);
+
+			if (spi_send_command(flash, sizeof cmd_read_from_cache, sizeof data, cmd_read_from_cache, data))
 			{
-				// printf("\n");
+				printf("Cannot read from cache\n");
+				return 1;
 			}
+
+			if (memcmp(sample, data, sizeof sample))
+			{
+				printf("Diff on sample and data\n");
+				return 1;
+			}
+		}
+
+		for (i = 0; i < sizeof sample; i++)
+		{
+			buf[bi++] = sample[i];
+			// printf("%02X ", data[i]);
+			// if (i % 32 == 31)
+			// {
+			// 	printf("\n");
+			// }
 		}
 
 		printf("READ DONE PAGE: %04X\n", page);
