@@ -61,6 +61,45 @@ static int UNUSED dosilicon_set_feature(struct flashctx *flash, uint8_t reg, uin
 	return ret;
 }
 
+static int read_page(struct flashctx *flash, uint16_t page, uint8_t *data, uint32_t size)
+{
+	uint8_t cmd_read_page[] = {PAGE_READ, 0x00, (page >> 8) & 0xff, page & 0xff};
+	uint8_t cmd_read_from_cache[] = {READ_ROM_CACHE, 0x00, 0x00, 0x00};
+	uint8_t status;
+
+	if (spi_send_command(flash, sizeof cmd_read_page, 0, cmd_read_page, NULL))
+	{
+		printf("Cannot read page\n");
+		return 1;
+	}
+
+	while (1)
+	{
+		if (dosilicon_get_feature(flash, STATUS_REGISTER, &status))
+		{
+			printf("Cannot get status\n");
+			return 1;
+		}
+
+		printf("Status: %02X\n", status);
+
+		if ((status & STATUS_OIP_BIT) == STATUS_OIP_READY)
+		{
+			break;
+		}
+	}
+
+	memset(data, 0, size);
+
+	if (spi_send_command(flash, sizeof cmd_read_from_cache, size, cmd_read_from_cache, data))
+	{
+		printf("Cannot read page from cache\n");
+		return 1;
+	}
+
+	return 0;
+}
+
 /* Here is the function which read contents from the Dosilicon flash */
 /*
 	1. PAGE READ to cache
@@ -73,10 +112,7 @@ static int UNUSED dosilicon_set_feature(struct flashctx *flash, uint8_t reg, uin
 int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, unsigned int len)
 {
 	msg_ginfo("Reading flash rom %u %u...\n", addr, len);
-	
-	uint8_t cmd_read_page[] = {PAGE_READ, 0x00, 0x00, 0x00};
-	uint8_t cmd_read_from_cache[] = {READ_ROM_CACHE, 0x00, 0x00, 0x00};
-	uint8_t status;
+
 	uint32_t page = 0x00;
 	uint32_t bi = 0;
 	uint8_t data[2048];
@@ -85,51 +121,23 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 
 	for (; page <= 0xffff; page++)
 	{
-		cmd_read_page[2] = (page >> 8) & 0xff;
-		cmd_read_page[3] = page & 0xff;
-		if (spi_send_command(flash, sizeof cmd_read_page, 0, cmd_read_page, NULL))
+		if (read_page(flash, page, sample, sizeof sample))
 		{
-			printf("Cannot read page\n");
-			return 1;
-		}
-
-		while (1)
-		{
-			if (dosilicon_get_feature(flash, STATUS_REGISTER, &status))
-			{
-				printf("Cannot get feature\n");
-				return 1;
-			}
-
-			printf("S: %02X\n", status);
-
-			if ((status & STATUS_OIP_BIT) == STATUS_OIP_READY)
-			{
-				break;
-			}
-		}
-
-		memset(sample, 0, sizeof sample);
-
-		if (spi_send_command(flash, sizeof cmd_read_from_cache, sizeof sample, cmd_read_from_cache, sample))
-		{
-			printf("Cannot read from cache\n");
+			printf("Cannot read page to sample\n");
 			return 1;
 		}
 
 		for (ci = 0; ci < 5; ci++)
 		{
-			memset(data, 0, sizeof data);
-
-			if (spi_send_command(flash, sizeof cmd_read_from_cache, sizeof data, cmd_read_from_cache, data))
+			if (read_page(flash, page, data, sizeof data))
 			{
-				printf("Cannot read from cache\n");
+				printf("Cannot read page to data %d\n", ci);
 				return 1;
 			}
 
 			if (memcmp(sample, data, sizeof sample))
 			{
-				printf("Diff on sample and data\n");
+				printf("Compare sample <> data fails\n");
 				return 1;
 			}
 		}
