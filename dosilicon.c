@@ -81,7 +81,7 @@ static int read_page(struct flashctx *flash, uint16_t page, uint8_t *data, uint3
 			return 1;
 		}
 
-		printf("Status: %02X\n", status);
+		// printf("Status: %02X\n", status);
 
 		if ((status & STATUS_OIP_BIT) == STATUS_OIP_READY)
 		{
@@ -99,6 +99,34 @@ static int read_page(struct flashctx *flash, uint16_t page, uint8_t *data, uint3
 
 	return 0;
 }
+
+// static int dosilicon_reset(struct flashctx *flash)
+// {
+// 	uint8_t cmd_reset[] = {RESET};
+// 	uint8_t status;
+
+// 	if (spi_send_command(flash, sizeof cmd_reset, 0, cmd_reset, NULL))
+// 	{
+// 		printf("Cannot reset\n");
+// 		return 1;
+// 	}
+
+// 	while (1)
+// 	{
+// 		if (dosilicon_get_feature(flash, STATUS_REGISTER, &status))
+// 		{
+// 			printf("Cannot get status\n");
+// 			return 1;
+// 		}
+
+// 		if ((status & STATUS_OIP_BIT) == STATUS_OIP_READY)
+// 		{
+// 			break;
+// 		}
+// 	}
+
+// 	return 0;
+// }
 
 /* Here is the function which read contents from the Dosilicon flash */
 /*
@@ -127,7 +155,7 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 			return 1;
 		}
 
-		for (ci = 0; ci < 5; ci++)
+		for (ci = 0; ci < 20; ci++)
 		{
 			if (read_page(flash, page, data, sizeof data))
 			{
@@ -137,8 +165,8 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 
 			if (memcmp(sample, data, sizeof sample))
 			{
-				printf("Compare sample <> data fails\n");
-				return 1;
+				printf("Compare sample <> data fails on page %04X\n", page);
+				break;
 			}
 		}
 
@@ -152,7 +180,7 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 			// }
 		}
 
-		printf("READ DONE PAGE: %04X\n", page);
+		// printf("READ DONE PAGE: %04X\n", page);
 	}
 
 	return 0;
