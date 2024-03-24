@@ -66,6 +66,10 @@ static int read_page(struct flashctx *flash, uint16_t page, uint8_t *data, uint3
 	uint8_t cmd_read_page[] = {PAGE_READ, 0x00, (page >> 8) & 0xff, page & 0xff};
 	uint8_t cmd_read_from_cache[] = {READ_ROM_CACHE, 0x00, 0x00, 0x00};
 	uint8_t status;
+	uint8_t data_in[2112];
+
+	memset(data_in, 0, sizeof data_in);
+	memset(data, 0, size);
 
 	if (spi_send_command(flash, sizeof cmd_read_page, 0, cmd_read_page, NULL))
 	{
@@ -89,13 +93,13 @@ static int read_page(struct flashctx *flash, uint16_t page, uint8_t *data, uint3
 		}
 	}
 
-	memset(data, 0, size);
-
-	if (spi_send_command(flash, sizeof cmd_read_from_cache, size, cmd_read_from_cache, data))
+	if (spi_send_command(flash, sizeof cmd_read_from_cache, sizeof data_in, cmd_read_from_cache, data_in))
 	{
 		printf("Cannot read page from cache\n");
 		return 1;
 	}
+
+	memcpy(data, data_in, size);
 
 	return 0;
 }
@@ -143,8 +147,9 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 
 	uint32_t page = 0x00;
 	uint32_t bi = 0;
-	uint8_t data[2048];
-	uint32_t i, ci;
+	// uint8_t data[2048];
+	uint32_t i;
+	// uint32_t ci;
 	uint8_t sample[2048];
 
 	for (; page <= 0xffff; page++)
@@ -155,20 +160,20 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 			return 1;
 		}
 
-		for (ci = 0; ci < 20; ci++)
-		{
-			if (read_page(flash, page, data, sizeof data))
-			{
-				printf("Cannot read page to data %d\n", ci);
-				return 1;
-			}
+		// for (ci = 0; ci < 20; ci++)
+		// {
+		// 	if (read_page(flash, page, data, sizeof data))
+		// 	{
+		// 		printf("Cannot read page to data %d\n", ci);
+		// 		return 1;
+		// 	}
 
-			if (memcmp(sample, data, sizeof sample))
-			{
-				printf("Compare sample <> data fails on page %04X\n", page);
-				break;
-			}
-		}
+		// 	if (memcmp(sample, data, sizeof sample))
+		// 	{
+		// 		printf("Compare sample <> data fails on page %04X\n", page);
+		// 		break;
+		// 	}
+		// }
 
 		for (i = 0; i < sizeof sample; i++)
 		{
@@ -180,7 +185,7 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 			// }
 		}
 
-		// printf("READ DONE PAGE: %04X\n", page);
+		printf("READ DONE PAGE: %04X\n", page);
 	}
 
 	return 0;
