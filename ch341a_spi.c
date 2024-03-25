@@ -359,6 +359,7 @@ static int ch341a_spi_spi_send_command(const struct flashctx *flash, unsigned in
 		unsigned int write_now = min(CH341_PACKET_LENGTH - 1, write_left);
 		unsigned int read_now = min ((CH341_PACKET_LENGTH - 1) - write_now, read_left);
 		ptr = wbuf[p+1];
+		memset(ptr, 0, CH341_PACKET_LENGTH);
 		*ptr++ = CH341A_CMD_SPI_STREAM;
 		unsigned int i;
 		for (i = 0; i < write_now; ++i)
@@ -372,6 +373,15 @@ static int ch341a_spi_spi_send_command(const struct flashctx *flash, unsigned in
 
 	int32_t ret = usb_transfer(data, __func__, CH341_PACKET_LENGTH + packets + writecnt + readcnt,
 				    writecnt + readcnt, wbuf[0], rbuf);
+	if (ret < 0)
+		return -1;
+
+	uint8_t buf[] = {
+		CH341A_CMD_UIO_STREAM,
+		CH341A_CMD_UIO_STM_OUT | 0x37,
+		CH341A_CMD_UIO_STM_END
+	};
+	ret = usb_transfer(data, __func__, sizeof buf, 0, buf, NULL);
 	if (ret < 0)
 		return -1;
 

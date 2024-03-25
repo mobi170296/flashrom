@@ -55,6 +55,22 @@ const struct flashchip flashchips[] = {
 	 * .read		= Chip read function
 	 * .voltage		= Voltage range in millivolt
 	 */
+	{
+		.vendor = "Winbond",
+		.name = "W25N01GV",
+		.bustype = BUS_SPI,
+		.manufacture_id = WINBOND_NEX_ID,
+		.model_id = WINBOND_W25N01GV,
+		.total_size = 131072,
+		.page_size = 2048,
+		.feature_bits = FEATURE_OTP,
+		.tested = TEST_OK_PR,
+		.probe = PROBE_SPI_W25N01GV,
+		.probe_timing = TIMING_ZERO,
+		.write = SPI_CHIP_WRITE256,
+		.read = SPI_W25N01GV_READ,
+		.voltage = {2700, 3600},
+	},
 
 	{
 		.vendor		= "AMD",

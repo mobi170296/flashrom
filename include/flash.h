@@ -251,6 +251,7 @@ enum probe_func {
 	PROBE_SPI_RES2,
 	PROBE_SPI_SFDP,
 	PROBE_SPI_ST95,
+	PROBE_SPI_W25N01GV,
 };
 
 enum write_func {
@@ -278,6 +279,7 @@ enum read_func {
 	EDI_CHIP_READ,
 	SPI_READ_AT45DB,
 	SPI_READ_AT45DB_E8,
+	SPI_W25N01GV_READ,
 	TEST_READ_INJECTOR, /* special case must come last. */
 };
 typedef int (read_func_t)(struct flashctx *flash, uint8_t *buf, unsigned int start, unsigned int len);

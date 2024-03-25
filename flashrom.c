@@ -553,6 +553,7 @@ static read_func_t *lookup_read_func_ptr(const struct flashchip *chip)
 		case SPI_READ_AT45DB: return spi_read_at45db;
 		case SPI_READ_AT45DB_E8: return spi_read_at45db_e8;
 		case TEST_READ_INJECTOR: return g_test_read_injector;
+		case SPI_W25N01GV_READ: return spi_w25n01gv_read;
 	/* default: total function, 0 indicates no read function set.
 	 * We explicitly do not want a default catch-all case in the switch
 	 * to ensure unhandled enum's are compiler warnings.
@@ -1078,6 +1079,7 @@ static probe_func_t *lookup_probe_func_ptr(const struct flashchip *chip)
 		case PROBE_SPI_RES2: return &probe_spi_res2;
 		case PROBE_SPI_SFDP: return &probe_spi_sfdp;
 		case PROBE_SPI_ST95: return &probe_spi_st95;
+		case PROBE_SPI_W25N01GV: return &probe_spi_w25n01gv;
 		/* default: total function, 0 indicates no probe function set.
 		 * We explicitly do not want a default catch-all case in the switch
 		 * to ensure unhandled enum's are compiler warnings.
