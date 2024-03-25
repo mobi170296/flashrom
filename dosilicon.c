@@ -11,7 +11,7 @@
 #define PAGE_READ 0x13
 #define GET_FEATURE 0x0F
 #define SET_FEATURE 0x1F
-#define READ_ROM_CACHE 0x0B
+#define READ_FROM_CACHE 0x03
 #define PROGRAM_LOAD 0x02
 #define BLOCK_ERASE 0xD8
 #define RESET 0xff
@@ -64,7 +64,7 @@ static int UNUSED dosilicon_set_feature(struct flashctx *flash, uint8_t reg, uin
 static int read_page(struct flashctx *flash, uint16_t page, uint8_t *data, uint32_t size)
 {
 	uint8_t cmd_read_page[] = {PAGE_READ, 0x00, (page >> 8) & 0xff, page & 0xff};
-	uint8_t cmd_read_from_cache[] = {READ_ROM_CACHE, 0x00, 0x00, 0x00};
+	uint8_t cmd_read_from_cache[] = {READ_FROM_CACHE, 0x00, 0x00, 0x00};
 	uint8_t status;
 	uint8_t data_in[2112];
 
@@ -104,33 +104,46 @@ static int read_page(struct flashctx *flash, uint16_t page, uint8_t *data, uint3
 	return 0;
 }
 
-// static int dosilicon_reset(struct flashctx *flash)
-// {
-// 	uint8_t cmd_reset[] = {RESET};
-// 	uint8_t status;
+static UNUSED int dosilicon_reset(struct flashctx *flash)
+{
+	uint8_t cmd_reset[] = {RESET};
+	uint8_t status;
 
-// 	if (spi_send_command(flash, sizeof cmd_reset, 0, cmd_reset, NULL))
-// 	{
-// 		printf("Cannot reset\n");
-// 		return 1;
-// 	}
+	if (spi_send_command(flash, sizeof cmd_reset, 0, cmd_reset, NULL))
+	{
+		printf("Cannot reset\n");
+		return 1;
+	}
 
-// 	while (1)
-// 	{
-// 		if (dosilicon_get_feature(flash, STATUS_REGISTER, &status))
-// 		{
-// 			printf("Cannot get status\n");
-// 			return 1;
-// 		}
+	while (1)
+	{
+		if (dosilicon_get_feature(flash, STATUS_REGISTER, &status))
+		{
+			printf("Cannot get status\n");
+			return 1;
+		}
 
-// 		if ((status & STATUS_OIP_BIT) == STATUS_OIP_READY)
-// 		{
-// 			break;
-// 		}
-// 	}
+		if ((status & STATUS_OIP_BIT) == STATUS_OIP_READY)
+		{
+			break;
+		}
+	}
 
-// 	return 0;
-// }
+	return 0;
+}
+
+static UNUSED void hex_dump(uint8_t *mem, uint32_t size, uint32_t width)
+{
+	uint32_t si = 0;
+	for (; si < size; si++)
+	{
+		printf("%02X ", mem[si]);
+		if (((si + 1) % width) == 0)
+		{
+			printf("\n");
+		}
+	}
+}
 
 /* Here is the function which read contents from the Dosilicon flash */
 /*
@@ -159,6 +172,8 @@ int spi_read_dosilicon(struct flashctx *flash, uint8_t *buf, unsigned int addr, 
 			printf("Cannot read page to sample\n");
 			return 1;
 		}
+
+		// hex_dump(sample, sizeof sample, 32);
 
 		// for (ci = 0; ci < 20; ci++)
 		// {
