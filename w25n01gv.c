@@ -13,6 +13,8 @@
 #define CMD_READ_STATUS 0x0F
 #define CMD_WRITE_STATUS 0x1F
 #define CMD_RESET 0xFF
+#define CMD_WRITE_ENABLE 0x06
+#define CMD_WRITE_DISABLE 0x04
 
 /* REGISTERS */
 #define REG_PROTECTION 0xA0 // SR1: SRP0 | BP3 | BP2 | BP1 | BP0 | TB | WP_E | SRP1
@@ -77,6 +79,29 @@ static UNUSED int write_status(struct flashctx *flash, uint8_t reg, uint8_t stat
     if (spi_send_command(flash, sizeof cmd, 0, cmd, NULL))
     {
         printf("Cannot write status\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+static UNUSED int enable_write(struct flashctx *flash)
+{
+    uint8_t cmd[] = { CMD_WRITE_ENABLE };
+
+    if (spi_send_command(flash, sizeof cmd, 0, cmd, NULL))
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+static UNUSED int disable_write(struct flashctx *flash)
+{
+    uint8_t cmd[] = { CMD_WRITE_DISABLE };
+    if (spi_send_command(flash, sizeof cmd, 0, cmd, NULL))
+    {
         return 1;
     }
 
